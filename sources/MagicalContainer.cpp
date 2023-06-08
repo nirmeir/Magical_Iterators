@@ -1,189 +1,369 @@
 #include "MagicalContainer.hpp"
 #include <algorithm>
-//include math.h for sqrt function
 #include <math.h>
+#include <iostream>
 
-namespace ariel {
+using namespace std;
+namespace ariel
+{
 
-    void MagicalContainer::addElement(int element) {
+    void MagicalContainer::addElement(int element)
+    {
         elements.push_back(element);
     }
 
-    void MagicalContainer::removeElement(int element) {
+    void MagicalContainer::removeElement(int element)
+    {
+        if (std::find(elements.begin(), elements.end(), element) == elements.end())
+        {
+            throw std::runtime_error("Element does not exist in the container");
+        }
+
         elements.erase(std::remove(elements.begin(), elements.end(), element), elements.end());
     }
 
-    int MagicalContainer::size() const {
+    int MagicalContainer::size() const
+    {
         return elements.size();
     }
 
-    std::vector<int> MagicalContainer::getCollection() const {
+    std::vector<int> &MagicalContainer::getCollection()
+    {
         return elements;
     }
 
-    std::vector<int>::const_iterator MagicalContainer::begin() const {
-    return sortedCollection.begin();
+    void MagicalContainer::set_collection(std::vector<int> new_collection)
+    {
+        elements = new_collection;
     }
 
-    std::vector<int>::const_iterator MagicalContainer::end() const {
-        return sortedCollection.end();
+    std::vector<int>::const_iterator MagicalContainer::begin()
+    {
+        return elements.begin();
     }
-     
-    
 
-    MagicalContainer::AscendingIterator::AscendingIterator(MagicalContainer& cont) : container(cont), current(0) {
+    std::vector<int>::const_iterator MagicalContainer::end()
+    {
+        return elements.end();
+    }
+
+    MagicalContainer::AscendingIterator::AscendingIterator(MagicalContainer &cont) : container(cont), current(0)
+    {
+        std::vector<int> sortedCollection;
+
         sortedCollection = container.getCollection();
         std::sort(sortedCollection.begin(), sortedCollection.end());
+        container.set_collection(sortedCollection);
     }
 
-    MagicalContainer::AscendingIterator::AscendingIterator(const AscendingIterator& other) : container(other.container), sortedCollection(other.sortedCollection), current(other.current) {}
+    MagicalContainer::AscendingIterator::AscendingIterator(const AscendingIterator &other) : container(other.container), current(other.current) {}
 
     MagicalContainer::AscendingIterator::~AscendingIterator() {}
 
-    MagicalContainer::AscendingIterator& MagicalContainer::AscendingIterator::operator=(const AscendingIterator& other) {
-        if (this != &other) {
-            container = other.container;
-            sortedCollection = other.sortedCollection;
-            current = other.current;
+    vector<int> &MagicalContainer::AscendingIterator::get_container()
+    {
+        return container.getCollection();
+    }
+
+    int MagicalContainer::AscendingIterator::get_current()
+    {
+        return current;
+    }
+
+    bool MagicalContainer::AscendingIterator::operator=(AscendingIterator &other)
+    {
+        if (this != &other)
+        {
+            throw std::runtime_error("Cannot assign to this iterator");
         }
-        return *this;
-    }
-
-    bool MagicalContainer::AscendingIterator::operator==(const AscendingIterator& other) const {
         return true;
     }
 
-    bool MagicalContainer::AscendingIterator::operator!=(const AscendingIterator& other) const {
-        return true;
+    int MagicalContainer::AscendingIterator::operator*()
+    {
+        return this->get_container().begin()[current];
     }
 
-    bool MagicalContainer::AscendingIterator::operator>(const AscendingIterator& other) const {
-        return true;
+    bool MagicalContainer::AscendingIterator::operator==(AscendingIterator &other)
+    {
+        return (this->get_current() == other.current);
     }
 
-    bool MagicalContainer::AscendingIterator::operator<(const AscendingIterator& other) const {
-        return true;
+    bool operator==(MagicalContainer::AscendingIterator &other, vector<int>::const_iterator it)
+    {
+
+        if (other.get_container().begin() == other.get_container().end())
+        {
+            return true;
+        }
+        return other.get_container().begin()[other.get_current()] == it[0];
     }
 
-    MagicalContainer::AscendingIterator& MagicalContainer::AscendingIterator::operator++() {
+    bool operator!=(MagicalContainer::AscendingIterator &other, vector<int>::const_iterator it)
+    {
+        return !(other == it);
+    }
+
+    bool MagicalContainer::AscendingIterator::operator!=(AscendingIterator &other)
+    {
+        return !(*this == other);
+    }
+
+    bool MagicalContainer::AscendingIterator::operator>(AscendingIterator &other)
+    {
+        return this->get_current() > other.get_current();
+    }
+
+    bool MagicalContainer::AscendingIterator::operator<(AscendingIterator &other)
+    {
+        return this->get_current() < other.get_current();
+    }
+
+    MagicalContainer::AscendingIterator &MagicalContainer::AscendingIterator::operator++()
+    {
+        if (this->get_current() == this->get_container().size())
+        {
+            throw std::runtime_error("Out of range");
+        }
+
         ++current;
         return *this;
     }
 
-    std::vector<int>::const_iterator MagicalContainer::AscendingIterator::begin() const {
-        return sortedCollection.begin();
+    vector<int>::const_iterator MagicalContainer::AscendingIterator::begin()
+    {
+
+        return this->get_container().begin();
     }
 
-    std::vector<int>::const_iterator MagicalContainer::AscendingIterator::end() const {
-        return sortedCollection.end();
+    vector<int>::const_iterator MagicalContainer::AscendingIterator::end()
+    {
+        return this->get_container().end();
     }
 
-    MagicalContainer::SideCrossIterator::SideCrossIterator(MagicalContainer& cont) : container(cont), currentFromStart(0), currentFromEnd(size_t(cont.size() - 1)) {
+    MagicalContainer::SideCrossIterator::SideCrossIterator(MagicalContainer &cont) : container(cont)
+    {
+
+        std::vector<int> temp = container.getCollection();
+        std::vector<int> sortedCollection;
+
+        std::sort(temp.rbegin(), temp.rend());
+
+        for (unsigned long i = 0; i < temp.size() / 2; i++)
+        {
+            sortedCollection.push_back(temp[size_t(temp.size() - 1 - i)]);
+            sortedCollection.push_back(temp[size_t(i)]);
+        }
+        if (container.size() % 2 != 0)
+        {
+            sortedCollection.push_back(temp[size_t(container.size() / 2)]);
+        }
+        container.set_collection(sortedCollection);
     }
 
-    MagicalContainer::SideCrossIterator::SideCrossIterator(const SideCrossIterator& other) : container(other.container), currentFromStart(other.currentFromStart), currentFromEnd(other.currentFromEnd) {}
+    MagicalContainer::SideCrossIterator::SideCrossIterator(const SideCrossIterator &other) : container(other.container) {}
 
     MagicalContainer::SideCrossIterator::~SideCrossIterator() {}
 
-    MagicalContainer::SideCrossIterator& MagicalContainer::SideCrossIterator::operator=(const SideCrossIterator& other) {
-        if (this != &other) {
-            container = other.container;
-            currentFromStart = other.currentFromStart;
-            currentFromEnd = other.currentFromEnd;
+    vector<int> &MagicalContainer::SideCrossIterator::get_container()
+    {
+        return container.getCollection();
+    }
+
+    int MagicalContainer::SideCrossIterator::get_current()
+    {
+        return current;
+    }
+
+    bool MagicalContainer::SideCrossIterator::operator=(SideCrossIterator &other)
+    {
+        if (this != &other)
+        {
+            throw std::runtime_error("Cannot assign to this iterator");
         }
-        return *this;
-    }
-
-    bool MagicalContainer::SideCrossIterator::operator==(const SideCrossIterator& other) const {
         return true;
     }
 
-    bool MagicalContainer::SideCrossIterator::operator!=(const SideCrossIterator& other) const {
-        return true;
+    int MagicalContainer::SideCrossIterator::operator*()
+    {
+        return this->get_container().begin()[current];
     }
 
-    bool MagicalContainer::SideCrossIterator::operator>(const SideCrossIterator& other) const {
-        return currentFromStart > other.currentFromStart;
+    bool MagicalContainer::SideCrossIterator::operator==(SideCrossIterator &other)
+    {
+        return (this->get_current() == other.current);
     }
 
-    bool MagicalContainer::SideCrossIterator::operator<(const SideCrossIterator& other) const {
-        return currentFromStart < other.currentFromStart;
+    bool operator==(MagicalContainer::SideCrossIterator &other, vector<int>::const_iterator it)
+    {
+
+        if (other.get_container().begin() == other.get_container().end())
+        {
+            return true;
+        }
+        return other.get_container().begin()[other.get_current()] == it[0];
     }
 
-    MagicalContainer::SideCrossIterator& MagicalContainer::SideCrossIterator::operator++() {
-        ++currentFromStart;
-        --currentFromEnd;
+    bool operator!=(MagicalContainer::SideCrossIterator &other, vector<int>::const_iterator it)
+    {
+        return !(other == it);
+    }
+
+    bool MagicalContainer::SideCrossIterator::operator!=(SideCrossIterator &other)
+    {
+        return !(*this == other);
+    }
+
+    bool MagicalContainer::SideCrossIterator::operator>(SideCrossIterator &other)
+    {
+        return this->get_current() > other.get_current();
+    }
+
+    bool MagicalContainer::SideCrossIterator::operator<(SideCrossIterator &other)
+    {
+        return this->get_current() < other.get_current();
+    }
+
+    MagicalContainer::SideCrossIterator &MagicalContainer::SideCrossIterator::operator++()
+    {
+        if (this->get_current() == this->get_container().size())
+        {
+            throw std::runtime_error("Out of range");
+        }
+        ++current;
         return *this;
     }
 
-    std::vector<int> ::const_iterator MagicalContainer::SideCrossIterator::begin() const{
-        return sortedCollection.begin();
+    std::vector<int>::const_iterator MagicalContainer::SideCrossIterator::begin()
+    {
+        return this->get_container().begin();
     }
 
-    std::vector<int> ::const_iterator MagicalContainer::SideCrossIterator::end() const{
-        return sortedCollection.end();
+    std::vector<int>::const_iterator MagicalContainer::SideCrossIterator::end()
+    {
+        return this->get_container().end();
     }
 
+    MagicalContainer::PrimeIterator::PrimeIterator(MagicalContainer &cont) : container(cont), current(0)
+    {
 
-    MagicalContainer::PrimeIterator::PrimeIterator(MagicalContainer& cont) : container(cont), current(0) {}
+        sortedCollection = container.getCollection();
+        std::sort(sortedCollection.begin(), sortedCollection.end());
+        sortedCollection.erase(std::remove_if(sortedCollection.begin(), sortedCollection.end(), [](int num)
+                                              {
+                                                  if (num < 2)
+                                                  {
+                                                      return true; // Exclude numbers less than 2 (not prime)
+                                                  }
+                                                  for (int i = 2; i <= std::sqrt(num); ++i)
+                                                  {
+                                                      if (num % i == 0)
+                                                      {
+                                                          return true; // Exclude numbers divisible by any other number (not prime)
+                                                      }
+                                                  }
+                                                  return false; // Include prime numbers
+                                              }),
+                               sortedCollection.end());
+    }
 
-    MagicalContainer::PrimeIterator::PrimeIterator(const PrimeIterator& other) : container(other.container), current(other.current) {}
+    MagicalContainer::PrimeIterator::PrimeIterator(const PrimeIterator &other) : container(other.container), current(other.current) {}
 
     MagicalContainer::PrimeIterator::~PrimeIterator() {}
 
-    MagicalContainer::PrimeIterator& MagicalContainer::PrimeIterator::operator=(const PrimeIterator& other) {
-        if (this != &other) {
-            container = other.container;
-            current = other.current;
+    vector<int> &MagicalContainer::PrimeIterator::get_container()
+    {
+        return sortedCollection;
+    }
+
+    int MagicalContainer::PrimeIterator::get_current()
+    {
+        return current;
+    }
+
+    bool MagicalContainer::PrimeIterator::operator=(PrimeIterator &other)
+    {
+        if (this != &other)
+        {
+            throw std::runtime_error("Cannot assign to this iterator");
         }
-        return *this;
-    }
-
-    bool MagicalContainer::PrimeIterator::operator==(const PrimeIterator& other) const {
         return true;
     }
 
-    bool MagicalContainer::PrimeIterator::operator!=(const PrimeIterator& other) const {
-        return true;
+    int MagicalContainer::PrimeIterator::operator*()
+    {
+        return this->get_container().begin()[current];
     }
 
-    bool MagicalContainer::PrimeIterator::operator>(const PrimeIterator& other) const {
-        return current > other.current;
+    bool MagicalContainer::PrimeIterator::operator==(PrimeIterator &other)
+    {
+        return this->get_current() == other.current;
     }
 
-    bool MagicalContainer::PrimeIterator::operator<(const PrimeIterator& other) const {
-        return current < other.current;
+    bool operator==(MagicalContainer::PrimeIterator &other, vector<int>::const_iterator it)
+    {
+
+        if (other.get_container().begin() == other.get_container().end())
+        {
+            return true;
+        }
+        return other.get_container().begin()[other.get_current()] == it[0];
     }
 
-    // int& MagicalContainer::PrimeIterator::operator*() const {
-    //     return container.getCollection()[current];
-    // }
+    bool operator!=(MagicalContainer::PrimeIterator &other, vector<int>::const_iterator it)
+    {
+        return !(other == it);
+    }
 
-    MagicalContainer::PrimeIterator& MagicalContainer::PrimeIterator::operator++() {
+    bool MagicalContainer::PrimeIterator::operator!=(PrimeIterator &other)
+    {
+        return !(*this == other);
+    }
+
+    bool MagicalContainer::PrimeIterator::operator>(PrimeIterator &other)
+    {
+        return this->get_current() > other.get_current();
+    }
+
+    bool MagicalContainer::PrimeIterator::operator<(PrimeIterator &other)
+    {
+        return this->get_current() < other.get_current();
+    }
+
+ 
+    MagicalContainer::PrimeIterator &MagicalContainer::PrimeIterator::operator++()
+    {
+        if (this->get_current() == this->get_container().size())
+        {
+            throw std::runtime_error("Out of range");
+        }
         ++current;
-        while (current < container.size() && !isPrime(container.getCollection()[current])) {
-            ++current;
-        }
         return *this;
     }
 
-    bool MagicalContainer::PrimeIterator::isPrime(int num) {
-        if (num < 2) {
+    bool MagicalContainer::PrimeIterator::isPrime(int num)
+    {
+        if (num < 2)
+        {
             return false;
         }
-        for (int i = 2; i <= std::sqrt(num); ++i) {
-            if (num % i == 0) {
+        for (int i = 2; i <= std::sqrt(num); ++i)
+        {
+            if (num % i == 0)
+            {
                 return false;
             }
         }
         return true;
     }
 
-    std::vector<int> ::const_iterator MagicalContainer::PrimeIterator::begin() const{
-        return sortedCollection.begin();
+    std::vector<int>::const_iterator MagicalContainer::PrimeIterator::begin()
+    {
+        return this->get_container().begin();
     }
 
-    std::vector<int> ::const_iterator MagicalContainer::PrimeIterator::end() const{
-        return sortedCollection.end();
+    std::vector<int>::const_iterator MagicalContainer::PrimeIterator::end()
+    {
+        return this->get_container().end();
     }
 }

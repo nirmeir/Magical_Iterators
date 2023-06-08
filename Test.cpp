@@ -40,7 +40,6 @@ TEST_CASE("Test AscendingIterator") {
     CHECK_NOTHROW(perimeIter.begin());
     CHECK_NOTHROW(perimeIter.end());
 
-
     CHECK_NOTHROW(container.removeElement(9));
     CHECK_NOTHROW(container.removeElement(2));
     CHECK_NOTHROW(container.removeElement(3));

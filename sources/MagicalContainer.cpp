@@ -9,7 +9,8 @@ namespace ariel
 
     void MagicalContainer::addElement(int element)
     {
-        elements.push_back(element);
+        auto it = std::upper_bound(elements.begin(), elements.end(), element);
+        elements.insert(it, element);
     }
 
     void MagicalContainer::removeElement(int element)
@@ -49,11 +50,6 @@ namespace ariel
 
     MagicalContainer::AscendingIterator::AscendingIterator(MagicalContainer &cont) : container(cont), current(0)
     {
-        std::vector<int> sortedCollection;
-
-        sortedCollection = container.getCollection();
-        std::sort(sortedCollection.begin(), sortedCollection.end());
-        container.set_collection(sortedCollection);
     }
 
     MagicalContainer::AscendingIterator::AscendingIterator(const AscendingIterator &other) : container(other.container), current(other.current) {}
@@ -144,15 +140,15 @@ namespace ariel
     MagicalContainer::SideCrossIterator::SideCrossIterator(MagicalContainer &cont) : container(cont)
     {
 
-        std::vector<int> temp = container.getCollection();
-        std::vector<int> sortedCollection;
+        vector<int> temp = container.getCollection();
+        vector<int> sortedCollection;
 
         std::sort(temp.rbegin(), temp.rend());
 
         for (unsigned long i = 0; i < temp.size() / 2; i++)
         {
             sortedCollection.push_back(temp[size_t(temp.size() - 1 - i)]);
-            sortedCollection.push_back(temp[size_t(i)]);
+             sortedCollection.push_back(temp[size_t(i)]);
         }
         if (container.size() % 2 != 0)
         {
@@ -174,6 +170,8 @@ namespace ariel
     {
         return current;
     }
+
+
 
     bool MagicalContainer::SideCrossIterator::operator=(SideCrossIterator &other)
     {
@@ -248,7 +246,7 @@ namespace ariel
     {
 
         sortedCollection = container.getCollection();
-        std::sort(sortedCollection.begin(), sortedCollection.end());
+        // std::sort(sortedCollection.begin(), sortedCollection.end());
         sortedCollection.erase(std::remove_if(sortedCollection.begin(), sortedCollection.end(), [](int num)
                                               {
                                                   if (num < 2)
